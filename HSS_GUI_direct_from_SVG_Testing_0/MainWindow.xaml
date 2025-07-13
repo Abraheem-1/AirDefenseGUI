@@ -374,12 +374,12 @@
 
                             <!-- Hidden Operation Input Section -->
                             <StackPanel x:Name="OperationInputPanel" Orientation="Vertical"
-                                        Margin="15,0,15,10" VerticalAlignment="Bottom"
+                                        Margin="15,0,15,2" VerticalAlignment="Bottom"
                                         Visibility="Collapsed">
 
                                 <!-- Input fields here -->
                                 <!-- Operation Name -->
-                                <Grid Margin="0,5" Height="25">
+                                <Grid Margin="0,2" Height="25">
                                     <TextBox x:Name="OperationNameTextBox"
                                              Background="#2A2B30"
                                              Foreground="White"
@@ -398,32 +398,58 @@
                                 </Grid>
 
                                 <!-- Mode ComboBox -->
-                                <ComboBox x:Name="ModeComboBox" Margin="0,5" SelectedIndex="0"
+                                <ComboBox x:Name="ModeComboBox" Margin="0,2" SelectedIndex="0"
                                           Height="25" Background="#2A2B30" Foreground="Black">
                                     <ComboBoxItem Content="Otomatik"/>
                                     <ComboBoxItem Content="Manuel"/>
                                 </ComboBox>
 
+                                <!-- DetectionMode ComboBox -->
+                                <ComboBox x:Name="DetectionModeComboBox" Margin="0,2" SelectedIndex="0"
+                                          Height="25" Background="#2A2B30" Foreground="Black"
+                                          SelectionChanged="DetectionModeComboBox_SelectionChanged">
+                                    <ComboBoxItem Content="Normal"/>
+                                    <ComboBoxItem Content="Dost-Düşman"/>
+                                </ComboBox>
+
                                 <!-- Target ComboBox -->
-                                <ComboBox x:Name="TargetComboBox" Margin="0,5" SelectedIndex="0"
+                                <ComboBox x:Name="TargetComboBox" Margin="0,2" SelectedIndex="0"
                                           Height="25" Background="#2A2B30" Foreground="Black">
                                     <ComboBoxItem Content="Tümü"/>
                                     <ComboBoxItem Content="Seçili"/>
                                 </ComboBox>
 
                                 <!-- Color ComboBox -->
-                                <ComboBox x:Name="ColorComboBox" Margin="0,5" SelectedIndex="0"
+                                <ComboBox x:Name="ColorComboBox" Margin="0,2" SelectedIndex="0"
                                           Height="25" Background="#2A2B30" Foreground="Black">
                                     <ComboBoxItem Content="Red"/>
                                     <ComboBoxItem Content="Blue"/>
                                     <ComboBoxItem Content="All"/>
                                 </ComboBox>
 
+                                <!-- Dost-Düşman Color ComboBox -->
+                                <StackPanel x:Name="FriendandEnemyColorInputPanel" Orientation="Horizontal"
+                                        Margin="0,0,0,2" VerticalAlignment="Bottom"
+                                        Visibility="Collapsed">
+                                    <ComboBox x:Name="FriendColorInputComboBox" Margin="0,2" SelectedIndex="0"
+                                                  Height="25" Width="200" Background="#2A2B30" Foreground="Black">
+                                        <ComboBoxItem Content="Red(dost)"/>
+                                        <ComboBoxItem Content="Blue(dost)"/>
+                                        <ComboBoxItem Content="All(dost)"/>
+                                    </ComboBox>
+                                    <ComboBox x:Name="EnemyColorInputComboBox" Margin="5,2" SelectedIndex="0"
+                                                      Height="25" Width="200" Background="#2A2B30" Foreground="Black">
+                                            <ComboBoxItem Content="Red(düşman)"/>
+                                        <ComboBoxItem Content="Blue(düşman)"/>
+                                        <ComboBoxItem Content="All(düşman)"/>
+                                        </ComboBox>
+                                </StackPanel>
+
                                 <!-- Submit Button -->
                                 <Button Content="✅ Operasyon Ekle"
                                         Click="AddOperation_Click"
                                         Background="{StaticResource ButtonGradient}" Foreground="White"
-                                        FontSize="12" Margin="0,10,0,0" Height="28"/>
+                                        FontSize="12" Margin="0,4,0,0" Height="28"/>
                             </StackPanel>
 
 
@@ -585,7 +611,7 @@
                                                Checked="DetectModeRadio_Checked"
                                                Margin="10,0,0,0"/>
                                 <RadioButton x:Name="DustEnemyModeRadio"
-                                               Content="Düst-Düşman"
+                                               Content="Dost-Düşman"
                                                Style="{StaticResource NormalRadioButtonStyle}" 
                                                GroupName="DetectMode"
                                                Checked="DetectModeRadio_Checked"

@@ -30,8 +30,11 @@ namespace DefenseControlSystem
     public class OperationData
     {
         public string Mode { get; set; }
+        public string DetectionMode { get; set; }
         public string Target { get; set; }
-        public string Color { get; set; }
+        public string Color { get; set; } // for Normal mode
+        public string FriendColor { get; set; } // for Dost
+        public string EnemyColor { get; set; } // for Düşman
     }
 
 
@@ -92,7 +95,8 @@ namespace DefenseControlSystem
 
             // Call AFTER components are loaded
             this.Loaded += (s, e) => DetectModeRadio_Checked(null, null);
-
+            // Delay until UI fully loads
+            this.Loaded += (s, e) => DetectionModeComboBox_SelectionChanged(null, null);
         }
 
         private void InitMockRangeData()
@@ -525,8 +529,13 @@ namespace DefenseControlSystem
             // Get input values
             string operationName = OperationNameTextBox.Text.Trim();
             string mode = (ModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            string detectionMode = NormalModeRadio.IsChecked == true ? "Normal" : "Dost-Düşman";
             string target = (TargetComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            string color = (ColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+
+            // NEW: get selected mode text from RadioButtons (if you now use them)
+            if (ManualRadioButton.IsChecked == true) mode = "Manuel";
+            else if (SemiAutoRadioButton.IsChecked == true) mode = "Yarı-Otomatik";
+            else if (FullAutoRadioButton.IsChecked == true) mode = "Tam Otomatik";
 
             if (string.IsNullOrEmpty(operationName))
             {
@@ -568,7 +577,23 @@ namespace DefenseControlSystem
             Grid.SetColumn(nameText, 1);
             grid.Children.Add(nameText);
 
-            // Create load button
+            // NEW: determine color(s) based on detection mode
+            string colorNormal = (SystemColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            string dustColor = (DustColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            string enemyColor = (EnemyColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+
+            // Create the operation data
+            var operationData = new OperationData
+            {
+                Mode = mode,
+                DetectionMode = detectionMode,
+                Target = target,
+                Color = (SystemColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString(),
+                FriendColor = (DustColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString(),
+                EnemyColor = (EnemyColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString()
+            };
+
+            // Create load button with operation data
             var loadButton = new WpfControls.Button
             {
                 Content = "Yükle",
@@ -580,17 +605,9 @@ namespace DefenseControlSystem
                 Foreground = Brushes.White,
                 FontSize = 11,
                 BorderThickness = new Thickness(0),
-                Tag = new Tuple<Border, OperationData>(
-                     operationBorder,
-                     new OperationData
-                     {
-                         Mode = mode,
-                         Target = target,
-                         Color = color
-                     })
+                Tag = new Tuple<Border, OperationData>(operationBorder, operationData)
             };
             Grid.SetColumn(loadButton, 2);
-            //loadButton.Click += OperationSelect_Click;
             loadButton.Click += LoadOperation_Click;
             grid.Children.Add(loadButton);
 
@@ -607,12 +624,16 @@ namespace DefenseControlSystem
             ModeComboBox.SelectedIndex = 0;
             TargetComboBox.SelectedIndex = 0;
             ColorComboBox.SelectedIndex = 0;
+            SystemColorComboBox.SelectedIndex = 0;
+            DustColorComboBox.SelectedIndex = 0;
+            EnemyColorComboBox.SelectedIndex = 0;
             OperationNameHint.Visibility = Visibility.Visible;
 
             // Hide the input panel
             OperationInputPanel.Visibility = Visibility.Collapsed;
             OperationButtonsPanel.Visibility = Visibility.Visible;
         }
+
 
 
         private void ShowOperationInputPanel(object sender, RoutedEventArgs e)
@@ -743,24 +764,9 @@ namespace DefenseControlSystem
                 if (!string.IsNullOrEmpty(operationName)
                     && operationsData.TryGetValue(operationName, out var data))
                 {
-                    // — Mode via RadioButtons —
-                    ManualRadioButton.IsChecked = data.Mode == "Manuel";
-                    SemiAutoRadioButton.IsChecked = data.Mode == "Yarı-Otomatik";
-                    FullAutoRadioButton.IsChecked = data.Mode == "Tam Otomatik";
+                    System.Diagnostics.Debug.WriteLine("Your debug message here");
+                    ApplyOperationParameters(data);
 
-                    // — Target Type (ComboBox in top-right panel) —
-                    var targetItem = TargetTypeComboBox.Items
-                        .OfType<ComboBoxItem>()
-                        .FirstOrDefault(i => (string)i.Content == data.Target);
-                    if (targetItem != null)
-                        TargetTypeComboBox.SelectedItem = targetItem;
-
-                    // — Color (ComboBox in top-right panel) —
-                    var sysColorItem = SystemColorComboBox.Items
-                        .OfType<ComboBoxItem>()
-                        .FirstOrDefault(i => (string)i.Content == data.Color);
-                    if (sysColorItem != null)
-                        SystemColorComboBox.SelectedItem = sysColorItem;
                 }
             }
         }
@@ -859,6 +865,82 @@ namespace DefenseControlSystem
                 DustEnemyColorPanel.Visibility = Visibility.Visible;
             }
         }
+
+        private void DetectionModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+
+            // Avoid crash during early load
+            if (ColorComboBox == null || FriendandEnemyColorInputPanel == null || DetectionModeComboBox == null)
+                return;
+
+            string selectedMode = (DetectionModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+
+            if (selectedMode == "Dost-Düşman")
+            {
+                ColorComboBox.Visibility = Visibility.Collapsed;
+                FriendandEnemyColorInputPanel.Visibility = Visibility.Visible;
+            }
+            else // Normal or any other fallback
+            {
+                ColorComboBox.Visibility = Visibility.Visible;
+                FriendandEnemyColorInputPanel.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void ApplyOperationParameters(OperationData data)
+        {
+            // 1. Set the Mode radio buttons
+            ManualRadioButton.IsChecked = data.Mode == "Manuel";
+            SemiAutoRadioButton.IsChecked = data.Mode == "Yarı-Otomatik";
+            FullAutoRadioButton.IsChecked = data.Mode == "Tam Otomatik";
+
+            // 2. Set Detection Mode (Normal or Dost-Düşman)
+            if (data.DetectionMode == "Dost-Düşman")
+            {
+                DustEnemyModeRadio.IsChecked = true;
+
+                // Trigger visibility change manually (in case it's handled in event)
+                ColorComboBox.Visibility = Visibility.Collapsed;
+                DustEnemyColorPanel.Visibility = Visibility.Visible;
+
+                // Set Dust (Friend) color
+                var friendItem = DustColorComboBox.Items
+                    .OfType<ComboBoxItem>()
+                    .FirstOrDefault(i => (string)i.Content == data.FriendColor?.Trim());
+                if (friendItem != null)
+                    DustColorComboBox.SelectedItem = friendItem;
+
+                // Set Düşman (Enemy) color
+                var enemyItem = EnemyColorComboBox.Items
+                    .OfType<ComboBoxItem>()
+                    .FirstOrDefault(i => (string)i.Content == data.EnemyColor?.Trim());
+                if (enemyItem != null)
+                    EnemyColorComboBox.SelectedItem = enemyItem;
+            }
+            else // Normal detection
+            {
+                NormalModeRadio.IsChecked = true;
+
+                // Trigger visibility change manually
+                ColorComboBox.Visibility = Visibility.Visible;
+                DustEnemyColorPanel.Visibility = Visibility.Collapsed;
+
+                var colorItem = ColorComboBox.Items
+                    .OfType<ComboBoxItem>()
+                    .FirstOrDefault(i => (string)i.Content == data.Color?.Trim());
+                if (colorItem != null)
+                    ColorComboBox.SelectedItem = colorItem;
+            }
+
+            // 3. Set Target Type
+            var targetItem = TargetTypeComboBox.Items
+                .OfType<ComboBoxItem>()
+                .FirstOrDefault(i => (string)i.Content == data.Target?.Trim());
+            if (targetItem != null)
+                TargetTypeComboBox.SelectedItem = targetItem;
+        }
+
+
 
     }
 }
