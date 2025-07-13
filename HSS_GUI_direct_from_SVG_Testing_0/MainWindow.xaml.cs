@@ -90,6 +90,9 @@ namespace DefenseControlSystem
 
             // Start the camera
 
+            // Call AFTER components are loaded
+            this.Loaded += (s, e) => DetectModeRadio_Checked(null, null);
+
         }
 
         private void InitMockRangeData()
@@ -683,44 +686,43 @@ namespace DefenseControlSystem
 
         private void LoadOperation_Click(object sender, RoutedEventArgs e)
         {
-            // Reset visuals for the previously active operation
-            if (activeOperationBorder != null)
+            // 1) Reset visuals for the previously active operation
+            if (activeOperationBorder != null && activeOperationBorder.Child is Grid previousGrid)
             {
-                if (activeOperationBorder.Child is Grid previousGrid)
+                // remove old left-bar indicator
+                var oldBar = previousGrid.Children
+                    .OfType<Rectangle>()
+                    .FirstOrDefault(r => r.Width == 5 && r.HorizontalAlignment == System.Windows.HorizontalAlignment.Left);
+                if (oldBar != null)
+                    previousGrid.Children.Remove(oldBar);
+
+                // reset text & button
+                var prevText = previousGrid.Children.OfType<TextBlock>().FirstOrDefault();
+                var prevBtn = previousGrid.Children.OfType<WpfControls.Button>().FirstOrDefault();
+                if (prevText != null)
                 {
-                    var toRemove = previousGrid.Children
-                        .OfType<Rectangle>()
-                        .FirstOrDefault(r => r.Width == 5 && r.HorizontalAlignment == System.Windows.HorizontalAlignment.Left);
-
-                    if (toRemove != null)
-                        previousGrid.Children.Remove(toRemove);
-
-                    var previousText = previousGrid.Children.OfType<TextBlock>().FirstOrDefault();
-                    var previousButton = previousGrid.Children.OfType<WpfControls.Button>().FirstOrDefault();
-
-                    if (previousText != null)
-                    {
-                        previousText.Background = Brushes.Transparent;
-                        previousText.Foreground = Brushes.White;
-                    }
-
-                    if (previousButton != null)
-                    {
-                        previousButton.Content = "Yükle";
-                        previousButton.Background = (Brush)FindResource("ButtonGradient");
-                    }
-
-                    // Hide previous green bar if it exists
-                    if (activeOperationBorder.Tag is Border previousBar)
-                        previousBar.Visibility = Visibility.Collapsed;
+                    prevText.Background = Brushes.Transparent;
+                    prevText.Foreground = Brushes.White;
                 }
+                if (prevBtn != null)
+                {
+                    prevBtn.Content = "Yükle";
+                    prevBtn.Background = (Brush)FindResource("ButtonGradient");
+                }
+
+                // hide previous green bar
+                if (activeOperationBorder.Tag is Border prevGreenBar)
+                    prevGreenBar.Visibility = Visibility.Collapsed;
             }
 
-            // Set the new active operation
-            if (sender is WpfControls.Button btn && btn.Parent is Grid grid && grid.Parent is Border newBorder)
+            // 2) Activate the new operation
+            if (sender is WpfControls.Button btn
+                && btn.Parent is Grid grid
+                && grid.Parent is Border newBorder)
             {
                 activeOperationBorder = newBorder;
 
+                // reset text color
                 var newText = grid.Children.OfType<TextBlock>().FirstOrDefault();
                 if (newText != null)
                 {
@@ -728,76 +730,42 @@ namespace DefenseControlSystem
                     newText.Foreground = Brushes.White;
                 }
 
+                // update button
                 btn.Content = "AKTİF";
                 btn.Background = Brushes.DarkBlue;
 
-                // Show green bar
+                // show green bar
                 if (newBorder.Tag is Border greenBar)
                     greenBar.Visibility = Visibility.Visible;
 
-                // --- Transfer operation parameters to main system controls ---
-                if (newText != null)
+                // 3) Transfer operation parameters to the system panel
+                string operationName = newText?.Text;
+                if (!string.IsNullOrEmpty(operationName)
+                    && operationsData.TryGetValue(operationName, out var data))
                 {
-                    string operationName = newText.Text;
+                    // — Mode via RadioButtons —
+                    ManualRadioButton.IsChecked = data.Mode == "Manuel";
+                    SemiAutoRadioButton.IsChecked = data.Mode == "Yarı-Otomatik";
+                    FullAutoRadioButton.IsChecked = data.Mode == "Tam Otomatik";
 
-                    if (operationsData.TryGetValue(operationName, out var data))
-                    {
-                        // Set ComboBoxes
-                        for (int i = 0; i < ModeComboBox.Items.Count; i++)
-                        {
-                            if ((ModeComboBox.Items[i] as ComboBoxItem)?.Content?.ToString() == data.Mode)
-                            {
-                                ModeComboBox.SelectedIndex = i;
-                                break;
-                            }
-                        }
+                    // — Target Type (ComboBox in top-right panel) —
+                    var targetItem = TargetTypeComboBox.Items
+                        .OfType<ComboBoxItem>()
+                        .FirstOrDefault(i => (string)i.Content == data.Target);
+                    if (targetItem != null)
+                        TargetTypeComboBox.SelectedItem = targetItem;
 
-                        for (int i = 0; i < TargetComboBox.Items.Count; i++)
-                        {
-                            if ((TargetComboBox.Items[i] as ComboBoxItem)?.Content?.ToString() == data.Target)
-                            {
-                                TargetComboBox.SelectedIndex = i;
-                                break;
-                            }
-                        }
-
-                        for (int i = 0; i < ColorComboBox.Items.Count; i++)
-                        {
-                            if ((ColorComboBox.Items[i] as ComboBoxItem)?.Content?.ToString() == data.Color)
-                            {
-                                ColorComboBox.SelectedIndex = i;
-                                break;
-                            }
-                        }
-
-                        // Update visible TargetTypeTextBlock
-                        if (!string.IsNullOrWhiteSpace(data.Target))
-                            TargetTypeTextBlock.Text = data.Target;
-
-                        // Update Mode Ellipse Visuals
-                        void SetMode(string selectedMode)
-                        {
-                            ManualModeDot.Fill = Brushes.Transparent;
-                            SemiAutoModeDot.Fill = Brushes.Transparent;
-                            FullAutoModeDot.Fill = Brushes.Transparent;
-
-                            ManualModeDot.Stroke = Brushes.White;
-                            SemiAutoModeDot.Stroke = Brushes.White;
-                            FullAutoModeDot.Stroke = Brushes.White;
-
-                            if (selectedMode == "Manuel")
-                                ManualModeDot.Fill = Brushes.White;
-                            else if (selectedMode == "Yarı-Otomatik")
-                                SemiAutoModeDot.Fill = Brushes.White;
-                            else if (selectedMode == "Tam Otomatik")
-                                FullAutoModeDot.Fill = Brushes.White;
-                        }
-
-                        SetMode(data.Mode);
-                    }
+                    // — Color (ComboBox in top-right panel) —
+                    var sysColorItem = SystemColorComboBox.Items
+                        .OfType<ComboBoxItem>()
+                        .FirstOrDefault(i => (string)i.Content == data.Color);
+                    if (sysColorItem != null)
+                        SystemColorComboBox.SelectedItem = sysColorItem;
                 }
             }
         }
+
+
 
 
         private void MenzilCheckbox_Checked(object sender, RoutedEventArgs e)
@@ -873,6 +841,23 @@ namespace DefenseControlSystem
         {
             base.OnPreviewKeyUp(e);
             Window_KeyUp(this, e);
+        }
+
+        private void DetectModeRadio_Checked(object sender, RoutedEventArgs e)
+        {
+            if (NormalColorPanel == null || DustEnemyColorPanel == null)
+                return; // UI not ready yet
+
+            if (NormalModeRadio.IsChecked == true)
+            {
+                NormalColorPanel.Visibility = Visibility.Visible;
+                DustEnemyColorPanel.Visibility = Visibility.Collapsed;
+            }
+            else if (DustEnemyModeRadio.IsChecked == true)
+            {
+                NormalColorPanel.Visibility = Visibility.Collapsed;
+                DustEnemyColorPanel.Visibility = Visibility.Visible;
+            }
         }
 
     }
