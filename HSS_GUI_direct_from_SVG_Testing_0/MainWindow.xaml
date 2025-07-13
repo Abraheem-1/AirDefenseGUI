@@ -400,8 +400,10 @@
                                 <!-- Mode ComboBox -->
                                 <ComboBox x:Name="ModeComboBox" Margin="0,2" SelectedIndex="0"
                                           Height="25" Background="#2A2B30" Foreground="Black">
-                                    <ComboBoxItem Content="Otomatik"/>
                                     <ComboBoxItem Content="Manuel"/>
+                                    <ComboBoxItem Content="Yarı-Otomatik"/>
+                                    <ComboBoxItem Content="Tam Otomatik"/>
+                                    <ComboBoxItem Content="Özel"/>
                                 </ComboBox>
 
                                 <!-- DetectionMode ComboBox -->
@@ -415,16 +417,20 @@
                                 <!-- Target ComboBox -->
                                 <ComboBox x:Name="TargetComboBox" Margin="0,2" SelectedIndex="0"
                                           Height="25" Background="#2A2B30" Foreground="Black">
-                                    <ComboBoxItem Content="Tümü"/>
-                                    <ComboBoxItem Content="Seçili"/>
+                                    <ComboBoxItem Content="Balon" />
+                                    <ComboBoxItem Content="Daire" />
+                                    <ComboBoxItem Content="Dörtgen" />
+                                    <ComboBoxItem Content="Üçgen" />
+                                    <ComboBoxItem Content="Hedef Tanımlanması" />
                                 </ComboBox>
 
                                 <!-- Color ComboBox -->
                                 <ComboBox x:Name="ColorComboBox" Margin="0,2" SelectedIndex="0"
                                           Height="25" Background="#2A2B30" Foreground="Black">
-                                    <ComboBoxItem Content="Red"/>
-                                    <ComboBoxItem Content="Blue"/>
-                                    <ComboBoxItem Content="All"/>
+                                    <ComboBoxItem Content="Kırmızı"/>
+                                    <ComboBoxItem Content="Mavi"/>
+                                    <ComboBoxItem Content="Yeşil"/>
+                                    <ComboBoxItem Content="Hepsi"/>
                                 </ComboBox>
 
                                 <!-- Dost-Düşman Color ComboBox -->
@@ -433,16 +439,18 @@
                                         Visibility="Collapsed">
                                     <ComboBox x:Name="FriendColorInputComboBox" Margin="0,2" SelectedIndex="0"
                                                   Height="25" Width="200" Background="#2A2B30" Foreground="Black">
-                                        <ComboBoxItem Content="Red(dost)"/>
-                                        <ComboBoxItem Content="Blue(dost)"/>
-                                        <ComboBoxItem Content="All(dost)"/>
+                                        <ComboBoxItem Content="Kırmızı"/>
+                                        <ComboBoxItem Content="Mavi"/>
+                                        <ComboBoxItem Content="Yeşil"/>
+                                        <ComboBoxItem Content="Hepsi"/>
                                     </ComboBox>
                                     <ComboBox x:Name="EnemyColorInputComboBox" Margin="5,2" SelectedIndex="0"
                                                       Height="25" Width="200" Background="#2A2B30" Foreground="Black">
-                                            <ComboBoxItem Content="Red(düşman)"/>
-                                        <ComboBoxItem Content="Blue(düşman)"/>
-                                        <ComboBoxItem Content="All(düşman)"/>
-                                        </ComboBox>
+                                        <ComboBoxItem Content="Kırmızı"/>
+                                        <ComboBoxItem Content="Mavi"/>
+                                        <ComboBoxItem Content="Yeşil"/>
+                                        <ComboBoxItem Content="Hepsi"/>
+                                    </ComboBox>
                                 </StackPanel>
 
                                 <!-- Submit Button -->
@@ -644,6 +652,7 @@
                                     <ComboBoxItem Content="Kırmızı"/>
                                     <ComboBoxItem Content="Mavi"/>
                                     <ComboBoxItem Content="Yeşil"/>
+                                    <ComboBoxItem Content="Hepsi"/>
                                 </ComboBox>
                             </StackPanel>
 
@@ -659,8 +668,10 @@
                                               Width="Auto"
                                               MinWidth="100"
                                               Margin="0,0,5,0">
-                                        <ComboBoxItem Content="Sarı"/>
-                                        <ComboBoxItem Content="Turuncu"/>
+                                        <ComboBoxItem Content="Kırmızı"/>
+                                        <ComboBoxItem Content="Mavi"/>
+                                        <ComboBoxItem Content="Yeşil"/>
+                                        <ComboBoxItem Content="Hepsi"/>
                                     </ComboBox>
 
                                     <ComboBox x:Name="EnemyColorComboBox"
@@ -669,7 +680,9 @@
                                               Width="Auto"
                                               MinWidth="100">
                                         <ComboBoxItem Content="Kırmızı"/>
-                                        <ComboBoxItem Content="Mor"/>
+                                        <ComboBoxItem Content="Mavi"/>
+                                        <ComboBoxItem Content="Yeşil"/>
+                                        <ComboBoxItem Content="Hepsi"/>
                                     </ComboBox>
                                 </StackPanel>
                             </StackPanel>
@@ -716,11 +729,11 @@
                 <!-- Status Panel -->
                 <Border Grid.Row="1" Background="#2D2F33" 
             BorderBrush="{StaticResource PanelStroke}" BorderThickness="1" 
-            CornerRadius="4" Margin="0,5,0,0">
+            CornerRadius="4" Margin="0,5,0,10">
                     <Grid>
                         <TextBlock Text="Sistem Durumu" 
                       Style="{StaticResource SubHeaderTextStyle}" 
-                      Margin="15,8,0,0" VerticalAlignment="Top"/>
+                      Margin="15,2,0,0" VerticalAlignment="Top"/>
 
                         <StackPanel Orientation="Horizontal" Margin="15,0,15,15" 
                        VerticalAlignment="Bottom">
@@ -775,8 +788,50 @@
             CornerRadius="4" Margin="0,89,0,0" Grid.RowSpan="2">
                     <Grid>
                         <TextBlock Text="Yasak Bölge Açıklaması" 
-                      Style="{StaticResource SubHeaderTextStyle}" 
-                      Margin="15,0,0,245" VerticalAlignment="Bottom"/>
+                                  Style="{StaticResource SubHeaderTextStyle}" 
+                                  Margin="15,10,0,245" VerticalAlignment="Bottom"/>
+
+                            <!-- Settings Button -->
+                        <Button x:Name="ZoneSettingsButton"
+                                Width="30" Height="30"
+                                Background="#2A2B30"
+                                BorderThickness="0"
+                                Margin="0,10,10,0"
+                                HorizontalAlignment="Right"
+                                VerticalAlignment="Top"
+                                Click="ZoneSettingsButton_Click">
+                            <Path Data="M12,17.27L18.18,21L16.54,13.97
+                                        L22,9.24L14.81,8.63L12,2L9.19,8.63
+                                        L2,9.24L7.45,13.97L5.82,21L12,17.27Z"
+                                  Fill="White" Stretch="Uniform"/>
+                        </Button>
+
+                        <!-- Hidden Forbidden Zone Settings Panel -->
+                        <StackPanel x:Name="ForbiddenZoneSettingsPanel" Visibility="Collapsed"
+                                      Background="#1A1B1F" Margin="10">
+
+                            <TextBlock Text="Ateş Kısıtlama Bölgesi (Kırmızı):"
+                                       Foreground="White" Margin="0,0,0,5"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBox x:Name="FireStartAngleTextBox" Width="50" Margin="0,0,5,0"/>
+                                <TextBlock Text="° - " Foreground="White" VerticalAlignment="Center"/>
+                                <TextBox x:Name="FireEndAngleTextBox" Width="50" Margin="5,0,0,0"/>
+                            </StackPanel>
+
+                            <TextBlock Text="Hareket Kısıtlama Bölgesi (Mavi):"
+                                          Foreground="White" Margin="0,10,0,5"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                <TextBox x:Name="MoveStartAngleTextBox" Width="50" Margin="0,0,5,0"/>
+                                <TextBlock Text="° - " Foreground="White" VerticalAlignment="Center"/>
+                                <TextBox x:Name="MoveEndAngleTextBox" Width="50" Margin="5,0,0,0"/>
+                            </StackPanel>
+
+                            <Button Content="Uygula"
+                                    Background="{StaticResource ButtonGradient}"
+                                    Foreground="White"
+                                    Click="UpdateForbiddenZones"/>
+                        </StackPanel>
+
 
                         <!-- Visual Legend Content will be in Part 4 -->
                         <!-- Part 4: Radar Display with Forbidden Zones -->
@@ -785,16 +840,16 @@
                         <Canvas Background="#2D2F33" Margin="50,35,51,18">
                             <!-- Radar Display Background -->
                             <Rectangle Width="440" Height="224" Canvas.Left="10" Canvas.Top="8" 
-               Fill="#1E1F23" Stroke="#464950" StrokeThickness="1"/>
+                                       Fill="#1E1F23" Stroke="#464950" StrokeThickness="1"/>
 
                             <!-- Range Circle (Yellow dashed) -->
                             <Ellipse Width="194" Height="194" Canvas.Left="133" Canvas.Top="23"
-             Stroke="#FFFF00" StrokeThickness="1" Fill="Transparent"
-             StrokeDashArray="3,3"/>
+                                     Stroke="#FFFF00" StrokeThickness="1" Fill="Transparent"
+                                     StrokeDashArray="3,3"/>
 
                             <!-- Forbidden Zones -->
                             <!-- Fire Restriction Zone (Red) -->
-                            <Path Fill="#FF0000" Opacity="0.3" Canvas.Left="230" Canvas.Top="120">
+                            <Path x:Name="FireRestrictionPath" Fill="#FF0000" Opacity="0.3" Canvas.Left="230" Canvas.Top="120">
                                 <Path.Data>
                                     <PathGeometry>
                                         <PathFigure StartPoint="0,0">
@@ -808,7 +863,7 @@
                             </Path>
 
                             <!-- Movement Restriction Zone (Blue) -->
-                            <Path Fill="#0000FF" Opacity="0.3" Canvas.Left="230" Canvas.Top="120">
+                            <Path x:Name="MovementRestrictionPath" Fill="#0000FF" Opacity="0.3" Canvas.Left="230" Canvas.Top="120">
                                 <Path.Data>
                                     <PathGeometry>
                                         <PathFigure StartPoint="0,0">

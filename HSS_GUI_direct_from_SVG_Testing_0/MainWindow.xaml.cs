@@ -526,24 +526,39 @@ namespace DefenseControlSystem
 
         private void AddOperation_Click(object sender, RoutedEventArgs e)
         {
-            // Get input values
+            // Get input values from the Operation Input Panel
             string operationName = OperationNameTextBox.Text.Trim();
             string mode = (ModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            string detectionMode = NormalModeRadio.IsChecked == true ? "Normal" : "Dost-Düşman";
+            string detectionMode = (DetectionModeComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
             string target = (TargetComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
 
-            // NEW: get selected mode text from RadioButtons (if you now use them)
-            if (ManualRadioButton.IsChecked == true) mode = "Manuel";
-            else if (SemiAutoRadioButton.IsChecked == true) mode = "Yarı-Otomatik";
-            else if (FullAutoRadioButton.IsChecked == true) mode = "Tam Otomatik";
-
+            // Validate operation name
             if (string.IsNullOrEmpty(operationName))
             {
                 System.Windows.MessageBox.Show("Lütfen operasyon adı girin.", "Uyarı", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return;
             }
 
-            // Create the container Border
+            // Detect selected colors
+            string color = (ColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            string friendColor = (FriendColorInputComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+            string enemyColor = (EnemyColorInputComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
+
+            // Prepare operation data
+            var operationData = new OperationData
+            {
+                Mode = mode,
+                DetectionMode = detectionMode,
+                Target = target,
+                Color = color,
+                FriendColor = friendColor,
+                EnemyColor = enemyColor
+            };
+
+            // Save operation data to dictionary
+            operationsData[operationName] = operationData;
+
+            // Create UI element for the operation
             var operationBorder = new Border
             {
                 Background = new SolidColorBrush(Color.FromRgb(42, 43, 48)),
@@ -551,13 +566,11 @@ namespace DefenseControlSystem
                 Margin = new Thickness(0, 0, 0, 5)
             };
 
-            // Create the Grid and columns
             var grid = new Grid();
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(5) }); // green bar
-            grid.ColumnDefinitions.Add(new ColumnDefinition()); // text
-            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); // button
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(5) });
+            grid.ColumnDefinitions.Add(new ColumnDefinition());
+            grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
 
-            // Create green indicator (initially hidden)
             var greenIndicator = new Border
             {
                 Background = Brushes.LimeGreen,
@@ -566,7 +579,6 @@ namespace DefenseControlSystem
             Grid.SetColumn(greenIndicator, 0);
             grid.Children.Add(greenIndicator);
 
-            // Create name text
             var nameText = new TextBlock
             {
                 Text = operationName,
@@ -577,23 +589,6 @@ namespace DefenseControlSystem
             Grid.SetColumn(nameText, 1);
             grid.Children.Add(nameText);
 
-            // NEW: determine color(s) based on detection mode
-            string colorNormal = (SystemColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            string dustColor = (DustColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-            string enemyColor = (EnemyColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString();
-
-            // Create the operation data
-            var operationData = new OperationData
-            {
-                Mode = mode,
-                DetectionMode = detectionMode,
-                Target = target,
-                Color = (SystemColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString(),
-                FriendColor = (DustColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString(),
-                EnemyColor = (EnemyColorComboBox.SelectedItem as ComboBoxItem)?.Content?.ToString()
-            };
-
-            // Create load button with operation data
             var loadButton = new WpfControls.Button
             {
                 Content = "Yükle",
@@ -611,10 +606,7 @@ namespace DefenseControlSystem
             loadButton.Click += LoadOperation_Click;
             grid.Children.Add(loadButton);
 
-            // Store green bar for later activation
             operationBorder.Tag = greenIndicator;
-
-            // Finalize layout
             operationBorder.Child = grid;
             operationBorder.MouseLeftButtonDown += OperationBorder_MouseLeftButtonDown;
             OperationsPanel.Children.Add(operationBorder);
@@ -622,17 +614,18 @@ namespace DefenseControlSystem
             // Reset input fields
             OperationNameTextBox.Text = "";
             ModeComboBox.SelectedIndex = 0;
+            DetectionModeComboBox.SelectedIndex = 0;
             TargetComboBox.SelectedIndex = 0;
             ColorComboBox.SelectedIndex = 0;
-            SystemColorComboBox.SelectedIndex = 0;
-            DustColorComboBox.SelectedIndex = 0;
-            EnemyColorComboBox.SelectedIndex = 0;
+            FriendColorInputComboBox.SelectedIndex = 0;
+            EnemyColorInputComboBox.SelectedIndex = 0;
             OperationNameHint.Visibility = Visibility.Visible;
 
-            // Hide the input panel
+            // Toggle UI visibility
             OperationInputPanel.Visibility = Visibility.Collapsed;
             OperationButtonsPanel.Visibility = Visibility.Visible;
         }
+
 
 
 
@@ -796,8 +789,75 @@ namespace DefenseControlSystem
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            this.Focus(); // Ensures key presses go to the window
+            this.Focus();
+
+            // Hardcoded Operation 1
+            if (OperationsPanel.Children.Count > 0)
+            {
+                var opBorder = (Border)OperationsPanel.Children[0];
+                var grid = (Grid)opBorder.Child;
+                var loadBtn = grid.Children.OfType<WpfControls.Button>().FirstOrDefault();
+                var opName = grid.Children.OfType<TextBlock>().FirstOrDefault()?.Text;
+
+                var data = new OperationData
+                {
+                    Mode = "Manuel",
+                    DetectionMode = "Normal",
+                    Target = "Balon",
+                    Color = "Kırmızı",
+                    FriendColor = "Mavi",
+                    EnemyColor = "Kırmızı"
+                };
+
+                operationsData[opName] = data;
+                loadBtn.Tag = new Tuple<Border, OperationData>(opBorder, data);
+            }
+
+            // Hardcoded Operation 2
+            if (OperationsPanel.Children.Count > 1)
+            {
+                var opBorder = (Border)OperationsPanel.Children[1];
+                var grid = (Grid)opBorder.Child;
+                var loadBtn = grid.Children.OfType<WpfControls.Button>().FirstOrDefault();
+                var opName = grid.Children.OfType<TextBlock>().FirstOrDefault()?.Text;
+
+                var data = new OperationData
+                {
+                    Mode = "Yarı-Otomatik",
+                    DetectionMode = "Dost-Düşman",
+                    Target = "Daire",
+                    Color = "Blue",
+                    FriendColor = "Yeşil",
+                    EnemyColor = "Kırmızı"
+                };
+
+                operationsData[opName] = data;
+                loadBtn.Tag = new Tuple<Border, OperationData>(opBorder, data);
+            }
+
+            // Hardcoded Operation 3
+            if (OperationsPanel.Children.Count > 2)
+            {
+                var opBorder = (Border)OperationsPanel.Children[2];
+                var grid = (Grid)opBorder.Child;
+                var loadBtn = grid.Children.OfType<WpfControls.Button>().FirstOrDefault();
+                var opName = grid.Children.OfType<TextBlock>().FirstOrDefault()?.Text;
+
+                var data = new OperationData
+                {
+                    Mode = "Tam Otomatik",
+                    DetectionMode = "Normal",
+                    Target = "Hedef Tanımlanması",
+                    Color = "Mavi",
+                    FriendColor = "Kırmızı",
+                    EnemyColor = "Mavi"
+                };
+
+                operationsData[opName] = data;
+                loadBtn.Tag = new Tuple<Border, OperationData>(opBorder, data);
+            }
         }
+
 
         private void Window_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
@@ -938,6 +998,75 @@ namespace DefenseControlSystem
                 .FirstOrDefault(i => (string)i.Content == data.Target?.Trim());
             if (targetItem != null)
                 TargetTypeComboBox.SelectedItem = targetItem;
+        }
+
+        private void ZoneSettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            ForbiddenZoneSettingsPanel.Visibility = ForbiddenZoneSettingsPanel.Visibility == Visibility.Visible
+                ? Visibility.Collapsed
+                : Visibility.Visible;
+        }
+
+        private void ApplyForbiddenZoneSettings_Click(object sender, RoutedEventArgs e)
+        {
+            if (double.TryParse(FireStartAngleTextBox.Text, out double fireStart) &&
+                double.TryParse(FireEndAngleTextBox.Text, out double fireEnd) &&
+                double.TryParse(MoveStartAngleTextBox.Text, out double moveStart) &&
+                double.TryParse(MoveEndAngleTextBox.Text, out double moveEnd))
+            {
+                // Example: Update paths or data for your Path elements here
+                UpdateForbiddenZones(null, null);
+            }
+            else
+            {
+                System.Windows.MessageBox.Show("Lütfen geçerli açılar girin.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
+        // Method to update your visual paths (you can modify this part accordingly)
+        private void UpdateForbiddenZones(object sender, RoutedEventArgs e)
+        {
+            if (!double.TryParse(FireStartAngleTextBox.Text, out double fireStart) ||
+                !double.TryParse(FireEndAngleTextBox.Text, out double fireEnd) ||
+                !double.TryParse(MoveStartAngleTextBox.Text, out double moveStart) ||
+                !double.TryParse(MoveEndAngleTextBox.Text, out double moveEnd))
+            {
+                System.Windows.MessageBox.Show("Lütfen geçerli açı değerleri girin.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
+                return;
+            }
+
+            PathGeometry CreateArc(double startAngle, double endAngle, double radius, bool clockwise)
+            {
+                double startRadians = (startAngle - 90) * Math.PI / 180;
+                double endRadians = (endAngle - 90) * Math.PI / 180;
+
+                System.Windows.Point startPoint = new System.Windows.Point(230 + radius * Math.Cos(startRadians), 120 + radius * Math.Sin(startRadians));
+                System.Windows.Point endPoint = new System.Windows.Point(230 + radius * Math.Cos(endRadians), 120 + radius * Math.Sin(endRadians));
+
+                bool isLargeArc = Math.Abs(endAngle - startAngle) > 180;
+
+                return new PathGeometry(new[]
+                {
+            new PathFigure
+            {
+                StartPoint = new System.Windows.Point(230, 120),
+                Segments = new PathSegmentCollection
+                {
+                    new LineSegment(startPoint, true),
+                    new ArcSegment(endPoint, new System.Windows.Size(radius, radius), 0,
+                                   isLargeArc,
+                                   clockwise ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
+                                   true),
+                    new LineSegment(new System.Windows.Point(230, 120), true)
+                }
+            }
+        });
+            }
+
+            FireRestrictionPath.Data = CreateArc(fireStart, fireEnd, 123, true);
+            MovementRestrictionPath.Data = CreateArc(moveStart, moveEnd, 123, false);
+
+            System.Windows.MessageBox.Show("Bölgeler başarıyla güncellendi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
 
