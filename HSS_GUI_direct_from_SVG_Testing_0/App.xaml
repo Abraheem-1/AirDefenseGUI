@@ -1,0 +1,9 @@
+﻿<Application x:Class="HSS_GUI_direct_from_SVG_Testing_0.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:HSS_GUI_direct_from_SVG_Testing_0"
+             StartupUri="MainWindow.xaml">
+    <Application.Resources>
+         
+    </Application.Resources>
+</Application>
