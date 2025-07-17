@@ -1000,11 +1000,13 @@ namespace DefenseControlSystem
                 TargetTypeComboBox.SelectedItem = targetItem;
         }
 
+        private bool isSettingsVisible = false;
+
         private void ZoneSettingsButton_Click(object sender, RoutedEventArgs e)
         {
-            ForbiddenZoneSettingsPanel.Visibility = ForbiddenZoneSettingsPanel.Visibility == Visibility.Visible
-                ? Visibility.Collapsed
-                : Visibility.Visible;
+            isSettingsVisible = !isSettingsVisible;
+            ForbiddenZonePanel.Visibility = isSettingsVisible ? Visibility.Collapsed : Visibility.Visible;
+            ForbiddenZoneSettingsPanel.Visibility = isSettingsVisible ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void ApplyForbiddenZoneSettings_Click(object sender, RoutedEventArgs e)
@@ -1014,8 +1016,12 @@ namespace DefenseControlSystem
                 double.TryParse(MoveStartAngleTextBox.Text, out double moveStart) &&
                 double.TryParse(MoveEndAngleTextBox.Text, out double moveEnd))
             {
-                // Example: Update paths or data for your Path elements here
-                UpdateForbiddenZones(null, null);
+                UpdateForbiddenZones(fireStart, fireEnd, moveStart, moveEnd);
+
+                // Collapse settings panel and show forbidden zones after update
+                ForbiddenZoneSettingsPanel.Visibility = Visibility.Collapsed;
+                ForbiddenZonePanel.Visibility = Visibility.Visible;
+                isSettingsVisible = false;
             }
             else
             {
@@ -1023,51 +1029,44 @@ namespace DefenseControlSystem
             }
         }
 
-        // Method to update your visual paths (you can modify this part accordingly)
-        private void UpdateForbiddenZones(object sender, RoutedEventArgs e)
+        private void UpdateForbiddenZones(double fireStart, double fireEnd, double moveStart, double moveEnd)
         {
-            if (!double.TryParse(FireStartAngleTextBox.Text, out double fireStart) ||
-                !double.TryParse(FireEndAngleTextBox.Text, out double fireEnd) ||
-                !double.TryParse(MoveStartAngleTextBox.Text, out double moveStart) ||
-                !double.TryParse(MoveEndAngleTextBox.Text, out double moveEnd))
-            {
-                System.Windows.MessageBox.Show("Lütfen geçerli açı değerleri girin.", "Hata", MessageBoxButton.OK, MessageBoxImage.Warning);
-                return;
-            }
-
             PathGeometry CreateArc(double startAngle, double endAngle, double radius, bool clockwise)
             {
                 double startRadians = (startAngle - 90) * Math.PI / 180;
                 double endRadians = (endAngle - 90) * Math.PI / 180;
 
-                System.Windows.Point startPoint = new System.Windows.Point(230 + radius * Math.Cos(startRadians), 120 + radius * Math.Sin(startRadians));
-                System.Windows.Point endPoint = new System.Windows.Point(230 + radius * Math.Cos(endRadians), 120 + radius * Math.Sin(endRadians));
+                System.Windows.Point startPoint = new System.Windows.Point(radius * Math.Cos(startRadians), radius * Math.Sin(startRadians));
+                System.Windows.Point endPoint = new System.Windows.Point(radius * Math.Cos(endRadians), radius * Math.Sin(endRadians));
 
-                bool isLargeArc = Math.Abs(endAngle - startAngle) > 180;
+                double angleDiff = ((endAngle - startAngle + 360) % 360);
+                bool isLargeArc = clockwise ? angleDiff > 180 : angleDiff < 180;
 
                 return new PathGeometry(new[]
                 {
-            new PathFigure
-            {
-                StartPoint = new System.Windows.Point(230, 120),
-                Segments = new PathSegmentCollection
-                {
-                    new LineSegment(startPoint, true),
-                    new ArcSegment(endPoint, new System.Windows.Size(radius, radius), 0,
-                                   isLargeArc,
-                                   clockwise ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
-                                   true),
-                    new LineSegment(new System.Windows.Point(230, 120), true)
-                }
+                    new PathFigure
+                    {
+                        StartPoint = new System.Windows.Point(0, 0),
+                        Segments = new PathSegmentCollection
+                        {
+                            new LineSegment(startPoint, true),
+                            new ArcSegment(endPoint, new System.Windows.Size(radius, radius), 0,
+                                           isLargeArc,
+                                           clockwise ? SweepDirection.Clockwise : SweepDirection.Counterclockwise,
+                                           true),
+                            new LineSegment(new System.Windows.Point(0, 0), true)
+                        }
+                    }
+                });
             }
-        });
-            }
+
 
             FireRestrictionPath.Data = CreateArc(fireStart, fireEnd, 123, true);
             MovementRestrictionPath.Data = CreateArc(moveStart, moveEnd, 123, false);
 
             System.Windows.MessageBox.Show("Bölgeler başarıyla güncellendi.", "Başarılı", MessageBoxButton.OK, MessageBoxImage.Information);
         }
+
 
 
 
